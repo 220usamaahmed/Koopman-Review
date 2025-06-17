@@ -34,3 +34,40 @@ The core innovation is making Koopman operators stochastic. Instead of determini
 - the entropy constraint they introduce prevents overfitting and maintains appropriate uncertainty levels
 
 ---
+
+## DECISION S4: EFFICIENT SEQUENCE-BASED RL VIA STATE SPACE LAYERS
+
+### Experiments
+
+#### Environments
+
+#### Baselines
+
+### MPC Formulation
+
+### Advantages and Main Novelty
+
+---
+
+### Experiments
+
+#### Environments
+- HalfCheetah, Hopper, Walker2D
+- AntMaze-umaze and AntMaze-diverse tasks
+- Expert, medium, and medium-replay datasets from D4RL
+
+#### Baselines
+- Decision Transformer and its variants: CDT, ODT
+- Traditional RL methods: IQL, CQL, BEAR, BRAC
+- Trajectory Transformer variants: T_Tu, T_Tq (sample-based methods using beam search)
+- RNN-based models (for ablation studies)
+
+### MPC Formulation
+Does not use MPC. Instead, it uses a sequence-based approach similar to Decision Transformers.
+
+### Advantages and Main Novelty
+- pplication of S4 layers to reinforcement learning**, replacing transformers in sequence-based RL
+- Hybrid training approach: off-policy pre-training followed by on-policy fine-tuning
+- Novel stable actor-critic mechanism adapted for S4 layers
+- fewer parameters than Decision Transformer
+- Linear complexity in sequence length vs quadratic for transformers
