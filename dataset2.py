@@ -1,14 +1,12 @@
 import minari
-from torch.utils.data import Dataset
 from pathlib import Path
 from os import makedirs
 from collections import deque
 import numpy as np
 import pickle
-import yaml
 
 
-class MujocoDataset(Dataset):
+class MujocoDataset:
 
     def __init__(
         self,
@@ -81,7 +79,7 @@ class MujocoDataset(Dataset):
             obs_de.append(o)
             acts_de.append(a)
 
-            if i < de_size // 2:
+            if i < de_size // 2 - 1:
                 continue
 
             obs_list = list(obs_de)
@@ -106,7 +104,7 @@ if __name__ == "__main__":
     print("Running MujocoDataset as main...")
     d = MujocoDataset("halfcheetah", "expert-v0")
 
-    obs, act = d[0]
+    obs, act = d[1]
 
     print(obs.shape)
     print(act.shape)
