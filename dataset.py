@@ -1,4 +1,6 @@
+import typing as _t
 import minari
+import gymnasium as gym
 from pathlib import Path
 from os import makedirs
 from collections import deque
@@ -6,21 +8,30 @@ import numpy as np
 import pickle
 
 
+class Buffer:
+    observations: _t.List
+    actions: _t.List
+
+
 class MujocoDataset:
 
     def __init__(
         self,
         env_name: str,
-        tag: str,
+        tag: str | None = None,
         *,
         window_size: int = 50,
+        random: bool = False,
         save_loc: str | None = None,
     ):
         self._env_name = env_name
         self._tag = tag
         self._save_loc = Path(
-            save_loc if save_loc is not None else f"dataset-{env_name}-{tag}"
+            save_loc
+            if save_loc is not None
+            else f"dataset-{env_name}-{tag if tag else 'uniform'}-{'random' if random else 'minari'}"
         )
+        self._random = random
         self._window_size = window_size
 
         self._obs = []
@@ -53,6 +64,12 @@ class MujocoDataset:
 
     def _build_dataset(self):
         print(f"Building dataset for mujoco/{self._env_name}/{self._tag}")
+        if self._random:
+            self._build_random_dataset()
+        else:
+            self._build_minari_dataset()
+
+    def _build_minari_dataset(self):
         dataset = minari.load_dataset(
             f"mujoco/{self._env_name}/{self._tag}", download=True
         )
@@ -64,7 +81,34 @@ class MujocoDataset:
         self._save_dataset()
         print("Dataset build and saved.")
 
-    def _add_from_episode(self, episode: minari.EpisodeData):
+    def _build_random_dataset(self):
+        print(f"Building random dataset for mujoco/{self._env_name}/{self._tag}")
+        env = gym.make(self._env_name, terminate_when_unhealthy=False)
+        total_steps = 1e6
+        current_step = 0
+        while True:
+            if current_step > total_steps:
+                print("stopping at ", current_step)
+                break
+            obs = env.reset()[0]
+            done = False
+            observations = []
+            actions = []
+            while not done:
+                current_step += 1
+                action = env.action_space.sample()
+                observations.append(obs)
+                actions.append(action)
+                obs, reward, terminated, truncated, info = env.step(action)
+                done = terminated or truncated or current_step > total_steps
+            episode = Buffer()
+            episode.observations = observations
+            episode.actions = actions
+            self._add_from_episode(episode)
+        env.close()
+        self._save_dataset()
+
+    def _add_from_episode(self, episode: minari.EpisodeData | Buffer):
         de_size = self._window_size
         obs_size = len(episode.observations[0])
         acts_size = len(episode.actions[0])
@@ -102,7 +146,8 @@ class MujocoDataset:
 
 if __name__ == "__main__":
     print("Running MujocoDataset as main...")
-    d = MujocoDataset("halfcheetah", "expert-v0")
+    # d = MujocoDataset("ant", "expert-v0")
+    d = MujocoDataset("Ant-v4", random=True)
 
     obs, act = d[1]
 
