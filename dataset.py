@@ -74,9 +74,17 @@ class MujocoDataset:
             f"mujoco/{self._env_name}/{self._tag}", download=True
         )
 
+        total_timesteps = 1e5
+        current_timestep = 0
+
         for episode in dataset.iterate_episodes():
+            current_timestep += len(episode.observations)
+            
             print("Adding data from episode...")
             self._add_from_episode(episode)
+
+            if current_timestep > total_timesteps:
+                break
 
         self._save_dataset()
         print("Dataset build and saved.")
@@ -84,7 +92,7 @@ class MujocoDataset:
     def _build_random_dataset(self):
         print(f"Building random dataset for mujoco/{self._env_name}/{self._tag}")
         env = gym.make(self._env_name, terminate_when_unhealthy=False)
-        total_steps = 1e6
+        total_steps = 1e5
         current_step = 0
         while True:
             if current_step > total_steps:
@@ -147,11 +155,12 @@ class MujocoDataset:
 if __name__ == "__main__":
     print("Running MujocoDataset as main...")
     # d = MujocoDataset("ant", "expert-v0")
-    d = MujocoDataset("Ant-v4", random=True)
+    d = MujocoDataset("Ant-v5", random=True)
 
     obs, act = d[1]
 
-    print(obs.shape)
-    print(act.shape)
+    print(len(d))
+    print(obs.shape, obs.dtype)
+    print(act.shape, act.dtype)
 
     print(obs[:25])
