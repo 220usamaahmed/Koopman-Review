@@ -70,7 +70,7 @@ class MujocoDataset:
             obs_len = len(episode.observations[0])
             acts_len = len(episode.actions[0])
 
-        self._max_trajs = 2000
+        self._max_trajs = int(1e5)
         self._obs = np.zeros((self._max_trajs, self._window_size, obs_len))
         self._acts = np.zeros((self._max_trajs, self._window_size, acts_len))
         self._traj_added = 0
@@ -89,12 +89,12 @@ class MujocoDataset:
             f"mujoco/{self._env_name}/{self._tag}", download=True
         )
 
-        total_timesteps = 1e4
+        total_timesteps = 2e6
         current_timestep = 0
 
         for episode in dataset.iterate_episodes():
             current_timestep += len(episode.observations)
-            
+
             print("Adding data from episode...")
             if self._add_from_episode(episode):
                 break
@@ -158,8 +158,8 @@ class MujocoDataset:
 
     def _save_dataset(self):
         if self._traj_added < self._max_trajs:
-            self._obs = self._obs[:self._traj_added, :, :]
-            self._acts = self._acts[:self._traj_added, :, :]
+            self._obs = self._obs[: self._traj_added, :, :]
+            self._acts = self._acts[: self._traj_added, :, :]
 
         print(f"Saving dataset to {self._save_loc}")
         makedirs(self._save_loc, exist_ok=True)
@@ -172,7 +172,7 @@ class MujocoDataset:
 if __name__ == "__main__":
     print("Running MujocoDataset as main...")
     # d = MujocoDataset("ant", "expert-v0")
-    d = MujocoDataset("Ant-v5", random=True)
+    d = MujocoDataset("HalfCheetah-v5", random=True)
 
     obs, act = d[1]
 
